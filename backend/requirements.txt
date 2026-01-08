@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+opencv-python-headless
+transformers
+torch
+Pillow
+psycopg2-binary
+sqlalchemy
+spacy

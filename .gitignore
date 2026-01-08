@@ -1,0 +1,17 @@
+# --- Mac System Files ---
+.DS_Store
+
+# --- Python Backend ---
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/debug_drawing_view.png
+backend/scans/
+
+# --- React Native Frontend ---
+CognitiveInkApp/node_modules/
+CognitiveInkApp/ios/Pods/
+CognitiveInkApp/android/app/build/
+CognitiveInkApp/ios/build/
+CognitiveInkApp/.expo/
