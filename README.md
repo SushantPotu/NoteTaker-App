@@ -1,36 +1,29 @@
-NoteTaker: Smart Note Digitizer & OCR Engine 🖋️📱
+# NoteTaker: Smart Note Digitizer & OCR Engine 🖋️📱
+
 A full-stack mobile application that bridges the gap between physical handwriting and digital text. CognitiveInk allows users to create, digitize, and share handwritten notes in real-time. It features a custom-engineered Computer Vision pipeline designed specifically to solve the challenge of OCR fragmentation in fast, disconnected cursive and hybrid handwriting.
 
-✨ Key Features
-Hybrid Handwriting Recognition: Accurately extracts both print and cursive text from digital and physical mediums.
+## ✨ Key Features:
+ - Hybrid Handwriting Recognition: Accurately extracts both print and cursive text from digital and physical mediums.
+ - Advanced CV Pipeline: Utilizes a custom OpenCV preprocessing pipeline featuring gamma correction and morphological erosion to reconstruct faint strokes and fragmented cursive topology.
+ - Spatial Sorting Algorithm: Integrates with PaddleOCR using a custom coordinate-based sorting mechanism to strictly enforce top-to-bottom reading order, resolving alignment artifacts in multi-line documents.
+ - In-App Note Management: Create, edit, and manage digitized notes directly within the mobile interface.
+ - Seamless Sharing: Export and share extracted text instantly.
 
-Advanced CV Pipeline: Utilizes a custom OpenCV preprocessing pipeline featuring gamma correction and morphological erosion to reconstruct faint strokes and fragmented cursive topology.
+## 🛠️ Tech Stack
 
-Spatial Sorting Algorithm: Integrates with PaddleOCR using a custom coordinate-based sorting mechanism to strictly enforce top-to-bottom reading order, resolving alignment artifacts in multi-line documents.
-
-In-App Note Management: Create, edit, and manage digitized notes directly within the mobile interface.
-
-Seamless Sharing: Export and share extracted text instantly.
-
-🛠️ Tech Stack
 Frontend:
-
-React Native (Expo)
-
-TypeScript / JavaScript
+ - React Native (Expo)
+ - TypeScript / JavaScript
 
 Backend & ML:
+ - Python 3
+ - FastAPI
+ - OpenCV (Image Processing)
+ - PaddleOCR (Optical Character Recognition)
 
-Python 3
+## 📁 Project Structure
 
-FastAPI
-
-OpenCV (Image Processing)
-
-PaddleOCR (Optical Character Recognition)
-
-📁 Project Structure
-Plaintext
+```text
 CognitiveInk/
 ├── backend/               # FastAPI server and Computer Vision pipeline
 │   ├── app/
@@ -42,40 +35,49 @@ CognitiveInk/
     ├── App.tsx            # Main application UI and camera logic
     ├── package.json
     └── app.json
-🚀 Installation & Setup
-Prerequisites
+```
+    
+## 🚀 Installation & Setup
+
+### Prerequisites
 Node.js & npm
 
 Python 3.8+
 
 Expo Go app installed on your iOS/Android device
 
-1. Backend Setup
+Backend Setup:
 Navigate to the backend directory and set up your Python environment:
 
-Bash
+```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install -r requirements.txt
 Start the FastAPI development server:
+```
 
-Bash
+```bash
 # We run on 0.0.0.0 so the mobile device can access it over the local network
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-2. Frontend Setup
+```
+
+Frontend Setup:
 Open a new terminal window, navigate to the frontend directory, and install dependencies:
 
-Bash
+```bash
 cd frontend
 npm install
 Start the Expo development server:
+```
 
-Bash
+```bash
 npx expo start
+```
 Note: Ensure your mobile device and computer are on the same Wi-Fi network. Scan the QR code in the terminal using the Expo Go app.
 
-🧠 The Computer Vision Pipeline
+
+## 🧠 The Computer Vision Pipeline
 Standard OCR engines struggle with fast digital handwriting because the strokes often disconnect or fade, causing the engine to read letters as isolated, random characters (e.g., reading "how" as "now" or "roh").
 
 NoteTaker solves this before the image ever reaches the OCR engine:
