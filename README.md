@@ -1,6 +1,6 @@
 # NoteTaker: Smart Note Digitizer & OCR Engine 🖋️📱
 
-A full-stack mobile application that bridges the gap between physical handwriting and digital text. CognitiveInk allows users to create, digitize, and share handwritten notes in real-time. It features a custom-engineered Computer Vision pipeline designed specifically to solve the challenge of OCR fragmentation in fast, disconnected cursive and hybrid handwriting.
+A full-stack mobile application that bridges the gap between physical handwriting and digital text. NoteTaker allows users to create, digitize, and share handwritten notes in real-time. It features a custom-engineered Computer Vision pipeline designed specifically to solve the challenge of OCR fragmentation in fast, disconnected cursive and hybrid handwriting.
 
 ## ✨ Key Features:
  - Hybrid Handwriting Recognition: Accurately extracts both print and cursive text from digital and physical mediums.
@@ -24,7 +24,7 @@ Backend & ML:
 ## 📁 Project Structure
 
 ```text
-CognitiveInk/
+NoteTaker/
 ├── backend/               # FastAPI server and Computer Vision pipeline
 │   ├── app/
 │   │   ├── main.py        # API routing and sorting logic
