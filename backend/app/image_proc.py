@@ -1,4 +1,5 @@
 import numpy as np
+# pyrefly: ignore [missing-import]
 import cv2
 import logging
 
