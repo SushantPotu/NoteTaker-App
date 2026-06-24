@@ -17,9 +17,9 @@ import NotebookCard from '../components/NotebookCard';
 import { getNotebooks, createNotebook, deleteNotebook, renameNotebook } from '../utils/api';
 
 const COLORS = [
-  '#673AB7', '#2196F3', '#E91E63', '#4CAF50',
-  '#FF9800', '#009688', '#795548', '#607D8B',
-  '#F44336', '#3F51B5', '#00BCD4', '#8BC34A',
+  '#6C5CE7', '#0984E3', '#E84393', '#00B894',
+  '#F0932B', '#00D2D3', '#6D214F', '#4A5568',
+  '#FF6B6B', '#10AC84', '#5758BB', '#E15F41',
 ];
 
 interface Notebook {
@@ -154,9 +154,9 @@ const NotebookListScreen = ({ navigation }: any) => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#673AB7" />
+          <ActivityIndicator size="large" color="#6C5CE7" />
         </View>
       </SafeAreaView>
     );
@@ -164,7 +164,7 @@ const NotebookListScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -273,7 +273,7 @@ const NotebookListScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5FA',
+    backgroundColor: '#F8FAFC',
   },
   loadingContainer: {
     flex: 1,
@@ -285,39 +285,41 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 16,
     paddingBottom: 16,
-    backgroundColor: '#1A1A2E',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#A0A0C0',
-    marginTop: 4,
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 2,
   },
   addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#673AB7',
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#6C5CE7',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#673AB7',
+    elevation: 3,
+    shadowColor: '#6C5CE7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   addButtonText: {
-    fontSize: 28,
+    fontSize: 26,
     color: '#FFFFFF',
-    fontWeight: '300',
+    fontWeight: '400',
     marginTop: -2,
   },
   gridContainer: {

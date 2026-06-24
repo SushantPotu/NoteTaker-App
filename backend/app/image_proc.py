@@ -24,40 +24,39 @@ def process_drawing_pipeline(image_bytes):
             new_r = (r.astype(float) * alpha_factor + white_bg.astype(float) * (1 - alpha_factor)).astype(np.uint8)
             image = cv2.merge([new_b, new_g, new_r])
 
+        # Auto-crop white borders around digital drawing
+        gray_for_crop = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresh_crop = cv2.threshold(gray_for_crop, 240, 255, cv2.THRESH_BINARY_INV)
+        pts = cv2.findNonZero(thresh_crop)
+        if pts is not None:
+            x, y, w, h = cv2.boundingRect(pts)
+            # Pad by 30px
+            pad = 30
+            h_orig, w_orig = image.shape[:2]
+            y1 = max(0, y - pad)
+            y2 = min(h_orig, y + h + pad)
+            x1 = max(0, x - pad)
+            x2 = min(w_orig, x + w + pad)
+            image = image[y1:y2, x1:x2]
+            logger.info(f"Auto-cropped drawing content: shape changed to {image.shape}")
+
         gray_check = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         if np.mean(gray_check) < 127:
             image = cv2.bitwise_not(image)
 
-        height, width = image.shape[:2]
-        target_width = 1200
-        if width < target_width:
-            scale = target_width / float(width)
+        # Resize maintaining aspect ratio so the max side is 1000px
+        h_c, w_c = image.shape[:2]
+        max_side = 1000
+        if max(h_c, w_c) > max_side:
+            scale = max_side / float(max(h_c, w_c))
+            image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        else:
+            scale = max_side / float(max(h_c, w_c))
             image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
 
-        gray_final = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
-        gray_final = adjust_gamma(gray_final, gamma=0.5)
-        
-        gray_final = cv2.GaussianBlur(gray_final, (3, 3), 0)
-
-        _, image = cv2.threshold(gray_final, 215, 255, cv2.THRESH_BINARY)
-        
-        image = cv2.bitwise_not(image)
-        
-        v_kernel = np.ones((3, 1), np.uint8)
-        image = cv2.dilate(image, v_kernel, iterations=1)
-        
-        h_kernel = np.ones((1, 3), np.uint8)
-        image = cv2.dilate(image, h_kernel, iterations=1)
-        
-        image = cv2.bitwise_not(image) 
-
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-
-        logger.info("Applied Processing")
-
+        # Add a light border padding (40px) around the cropped canvas
         image = cv2.copyMakeBorder(
-            image, top=100, bottom=100, left=100, right=100, 
+            image, top=40, bottom=40, left=40, right=40, 
             borderType=cv2.BORDER_CONSTANT, value=[255, 255, 255]
         )
 

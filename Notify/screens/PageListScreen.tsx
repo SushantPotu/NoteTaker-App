@@ -119,7 +119,7 @@ const PageListScreen = ({ route, navigation }: any) => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={notebookColor} />
         </View>
@@ -129,7 +129,7 @@ const PageListScreen = ({ route, navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -176,7 +176,13 @@ const PageListScreen = ({ route, navigation }: any) => {
 
       {/* FAB */}
       <TouchableOpacity
-        style={[styles.fab, { backgroundColor: notebookColor }]}
+        style={[
+          styles.fab,
+          {
+            backgroundColor: notebookColor,
+            shadowColor: notebookColor,
+          },
+        ]}
         onPress={handleCreatePage}
         disabled={creating}
         activeOpacity={0.8}
@@ -194,7 +200,7 @@ const PageListScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5FA',
+    backgroundColor: '#F8FAFC',
   },
   loadingContainer: {
     flex: 1,
@@ -207,22 +213,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
-    backgroundColor: '#1A1A2E',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   backText: {
     fontSize: 22,
-    color: '#FFFFFF',
+    color: '#0F172A',
+    fontWeight: '500',
   },
   headerInfo: {
     flexDirection: 'row',
@@ -230,30 +237,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: 10,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#A0A0C0',
+    color: '#64748B',
     marginTop: 2,
+    fontWeight: '500',
   },
   listContainer: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 96,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+    paddingBottom: 60,
   },
   emptyIcon: {
     fontSize: 64,
@@ -262,12 +272,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A1A2E',
+    color: '#0F172A',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -280,8 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
+    elevation: 4,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

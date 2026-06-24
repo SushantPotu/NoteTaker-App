@@ -5,8 +5,13 @@ logger = logging.getLogger("uvicorn")
 
 class OCREngine:
     def __init__(self):
-        logger.info("Loading PaddleOCR Model...")
-        self.model = PaddleOCR(use_angle_cls=True, lang='en', enable_mkldnn=True) 
+        self.model = PaddleOCR(
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+            lang='en',
+            enable_mkldnn=True
+        )
         logger.info("PaddleOCR loaded!")
 
     def extract_text(self, image, min_confidence=0.5):

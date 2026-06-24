@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 import DrawingModal from '../DrawingModal';
 import { scanImage, getPage, updatePage } from '../utils/api';
 
@@ -23,6 +24,32 @@ const PageEditorScreen = ({ route, navigation }: any) => {
   const [loading, setLoading] = useState(false);
   const [isDrawingVisible, setIsDrawingVisible] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+
+  // Swipe Gestures
+  const touchStart = React.useRef({ x: 0, y: 0 });
+
+  const handleTouchStart = (e: any) => {
+    if (isDrawingVisible || loading) return;
+    touchStart.current = {
+      x: e.nativeEvent.pageX,
+      y: e.nativeEvent.pageY,
+    };
+  };
+
+  const handleTouchEnd = (e: any) => {
+    if (isDrawingVisible || loading) return;
+    const dx = e.nativeEvent.pageX - touchStart.current.x;
+    const dy = e.nativeEvent.pageY - touchStart.current.y;
+    
+    // Require a clear horizontal swipe (width of movement > 120 and at least 2.5 times larger than vertical movement)
+    if (Math.abs(dx) > 120 && Math.abs(dx) > 2.5 * Math.abs(dy)) {
+      if (dx > 0 && prevPage) {
+        navigateToPage(prevPage);
+      } else if (dx < 0 && nextPage) {
+        navigateToPage(nextPage);
+      }
+    }
+  };
 
   // Load existing page data
   useEffect(() => {
@@ -73,6 +100,51 @@ const PageEditorScreen = ({ route, navigation }: any) => {
       if (uri) {
         updatePage(pageId, { image_data: uri }).catch(console.error);
       }
+    }
+  };
+
+  const pickDocument = async () => {
+    try {
+      const res = await DocumentPicker.pick({
+        type: [
+          DocumentPicker.types.plainText,
+          DocumentPicker.types.pdf,
+          DocumentPicker.types.images,
+        ],
+      });
+      const file = res[0];
+      if (file) {
+        setLoading(true);
+        setExtractedText('');
+        
+        const formData = new FormData();
+        formData.append('file', {
+          uri: file.uri,
+          name: file.name || 'document',
+          type: file.type || 'application/octet-stream',
+        } as any);
+
+        const data = await scanImage(formData, pageId);
+        const text = data.extracted_text || 'No text found.';
+        setExtractedText(text);
+
+        if (file.type?.startsWith('image/')) {
+          setImageUri(file.uri);
+          updatePage(pageId, { image_data: file.uri, extracted_text: text }).catch(console.error);
+        } else {
+          setImageUri(null);
+          updatePage(pageId, { image_data: '', extracted_text: text }).catch(console.error);
+        }
+      }
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User cancelled document picker');
+      } else {
+        console.error(err);
+        setExtractedText('Error picking document: ' + (err as any).message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,7 +207,7 @@ const PageEditorScreen = ({ route, navigation }: any) => {
   if (pageLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={notebookColor} />
         </View>
@@ -144,8 +216,12 @@ const PageEditorScreen = ({ route, navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A1A2E" />
+    <SafeAreaView
+      style={styles.container}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -168,8 +244,8 @@ const PageEditorScreen = ({ route, navigation }: any) => {
             >
               <Text style={styles.navArrowText}>‹</Text>
             </TouchableOpacity>
-            <View style={[styles.pageBadge, { backgroundColor: notebookColor }]}>
-              <Text style={styles.pageBadgeText}>Page {pageNumber}</Text>
+            <View style={[styles.pageBadge, { backgroundColor: notebookColor + '20' }]}>
+              <Text style={[styles.pageBadgeText, { color: notebookColor }]}>Page {pageNumber}</Text>
             </View>
             <TouchableOpacity
               disabled={!nextPage}
@@ -203,17 +279,35 @@ const PageEditorScreen = ({ route, navigation }: any) => {
 
         {/* Action Buttons */}
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button} onPress={pickImage}>
+          <TouchableOpacity 
+            style={[styles.button, styles.galleryButton]} 
+            onPress={pickImage}
+          >
             <Text style={styles.buttonEmoji}>📷</Text>
-            <Text style={styles.buttonText}>Gallery</Text>
+            <Text style={[styles.buttonText, styles.galleryButtonText]}>Gallery</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: notebookColor }]}
+            style={[styles.button, styles.filesButton]}
+            onPress={pickDocument}
+          >
+            <Text style={styles.buttonEmoji}>📁</Text>
+            <Text style={[styles.buttonText, styles.filesButtonText]}>Files</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button, 
+              styles.writeButton, 
+              { 
+                backgroundColor: notebookColor,
+                shadowColor: notebookColor,
+              }
+            ]}
             onPress={() => setIsDrawingVisible(true)}
           >
             <Text style={styles.buttonEmoji}>✏️</Text>
-            <Text style={styles.buttonText}>Write Note</Text>
+            <Text style={[styles.buttonText, styles.writeButtonText]}>Write Note</Text>
           </TouchableOpacity>
         </View>
 
@@ -259,6 +353,45 @@ const PageEditorScreen = ({ route, navigation }: any) => {
           onOK={handleDrawingSaved}
         />
       </ScrollView>
+
+      {/* Quick Page Navigator Sticky at Bottom */}
+      <View style={styles.quickNavContainer}>
+        <Text style={styles.quickNavLabel}>Jump to Page:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickNavScroll}
+        >
+          {allPages
+            ? [...allPages]
+                .sort((a: any, b: any) => a.page_number - b.page_number)
+                .map((page: any) => {
+                  const isCurrent = page.id === pageId;
+                  return (
+                    <TouchableOpacity
+                      key={page.id}
+                      style={[
+                        styles.quickNavPill,
+                        isCurrent
+                          ? { backgroundColor: notebookColor }
+                          : styles.quickNavPillInactive,
+                      ]}
+                      onPress={() => !isCurrent && navigateToPage(page)}
+                    >
+                      <Text
+                        style={[
+                          styles.quickNavPillText,
+                          isCurrent && styles.quickNavPillTextActive,
+                        ]}
+                      >
+                        Page {page.page_number}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })
+            : null}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -266,7 +399,7 @@ const PageEditorScreen = ({ route, navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5FA',
+    backgroundColor: '#F8FAFC',
   },
   loadingContainer: {
     flex: 1,
@@ -279,32 +412,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 14,
-    backgroundColor: '#1A1A2E',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   backText: {
     fontSize: 22,
-    color: '#FFFFFF',
+    color: '#0F172A',
+    fontWeight: '500',
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
+    marginRight: 40, // offset backButton to center the content
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#A0A0C0',
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#64748B',
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   pageNav: {
     flexDirection: 'row',
@@ -315,7 +452,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -324,8 +461,9 @@ const styles = StyleSheet.create({
   },
   navArrowText: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: '#0F172A',
     fontWeight: '600',
+    marginTop: -2,
   },
   pageBadge: {
     paddingHorizontal: 14,
@@ -334,8 +472,7 @@ const styles = StyleSheet.create({
   },
   pageBadgeText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
   },
   scrollContent: {
     padding: 16,
@@ -350,13 +487,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
+    elevation: 2,
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: '#EEEEF5',
+    borderColor: '#E2E8F0',
   },
   previewImage: {
     width: '100%',
@@ -370,48 +507,63 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   placeholderText: {
-    color: '#AAA',
+    color: '#94A3B8',
     fontSize: 14,
+    fontWeight: '500',
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
-    gap: 10,
+    gap: 8,
   },
   button: {
     flex: 1,
-    backgroundColor: '#2196F3',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
+  },
+  galleryButton: {
+    backgroundColor: '#EFF6FF',
+  },
+  galleryButtonText: {
+    color: '#1D4ED8',
+  },
+  filesButton: {
+    backgroundColor: '#ECFDF5',
+  },
+  filesButtonText: {
+    color: '#047857',
+  },
+  writeButton: {
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+  },
+  writeButtonText: {
+    color: '#FFFFFF',
   },
   buttonEmoji: {
-    fontSize: 18,
+    fontSize: 16,
   },
   buttonText: {
-    color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 13,
   },
   scanButton: {
     width: '100%',
-    backgroundColor: '#1A1A2E',
+    backgroundColor: '#0F172A',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 16,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
   },
@@ -422,54 +574,98 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 16,
+    letterSpacing: -0.2,
   },
   resultContainer: {
     width: '100%',
     backgroundColor: '#FFFFFF',
     padding: 18,
     borderRadius: 16,
-    minHeight: 100,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    minHeight: 120,
+    elevation: 2,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     borderWidth: 1,
-    borderColor: '#EEEEF5',
+    borderColor: '#E2E8F0',
   },
   resultLabel: {
-    fontWeight: '700',
+    fontWeight: '800',
     marginBottom: 10,
-    color: '#1A1A2E',
+    color: '#0F172A',
     fontSize: 15,
+    letterSpacing: -0.3,
   },
   resultText: {
     fontSize: 15,
-    color: '#444',
+    color: '#334155',
     lineHeight: 24,
+    fontWeight: '500',
   },
   resultPlaceholder: {
     fontSize: 14,
-    color: '#CCC',
+    color: '#94A3B8',
     fontStyle: 'italic',
   },
   shareButton: {
     width: '100%',
-    backgroundColor: '#FF9800',
+    backgroundColor: '#0284C7',
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
     marginTop: 12,
     elevation: 3,
-    shadowColor: '#FF9800',
+    shadowColor: '#0284C7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 6,
   },
   shareButtonText: {
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 16,
+  },
+  quickNavContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderColor: '#E2E8F0',
+    elevation: 8,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+  },
+  quickNavLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  quickNavScroll: {
+    gap: 8,
+  },
+  quickNavPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quickNavPillInactive: {
+    backgroundColor: '#F1F5F9',
+  },
+  quickNavPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  quickNavPillTextActive: {
+    color: '#FFFFFF',
   },
 });
 

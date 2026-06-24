@@ -61,7 +61,36 @@ async def scan_note(
     try:
         raw_bytes = await file.read()
 
-        if file.filename.endswith('png') or "drawing" in file.filename:
+        if file.filename.endswith('.txt'):
+            logger.info("Importing text file directly")
+            text = raw_bytes.decode('utf-8', errors='ignore')
+        elif file.filename.endswith('.pdf'):
+            logger.info("Importing PDF document")
+            import pypdfium2 as pdfium
+            import cv2
+            import numpy as np
+            
+            pdf = pdfium.PdfDocument(raw_bytes)
+            text_parts = []
+            
+            for i in range(len(pdf)):
+                page = pdf[i]
+                textpage = page.get_textpage()
+                extracted = textpage.get_text_range()
+                
+                if extracted and extracted.strip():
+                    text_parts.append(extracted.strip())
+                else:
+                    logger.info(f"Page {i+1} has no digital text. Running OCR...")
+                    bitmap = page.render(scale=2)
+                    pil_img = bitmap.to_pil()
+                    cv_img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+                    page_text = ocr_engine.extract_text(cv_img, min_confidence=0.6)
+                    if page_text:
+                        text_parts.append(page_text)
+            
+            text = "\n\n".join(text_parts)
+        elif file.filename.endswith('png') or "drawing" in file.filename:
             logger.info("Digital drawing mode (Low Threshold 0.3)")
             image = process_drawing_pipeline(raw_bytes)
             text = ocr_engine.extract_text(image, min_confidence=0.3)
